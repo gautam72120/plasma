@@ -1,0 +1,57 @@
+import discord
+from discord.ext import commands
+
+from .embeds import Embed
+
+
+class ConfirmationView(discord.ui.View):
+    def __init__(self, ctx, *, timeout, delete_after):
+        super().__init__(timeout=timeout)
+        self.ctx = ctx
+        self.outcome = None
+        self.message = None
+        self.delete_after = delete_after
+
+    async def interaction_check(self, interaction):
+        if interaction.user.id != self.ctx.author.id:
+            embed = Embed("You can't use this!", style="❌")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return False
+        return True
+
+    async def finalize(self, outcome):
+        self.outcome = outcome
+        self.stop()
+
+        if self.message is None:
+            return
+
+        if self.delete_after:
+            await self.message.delete()
+        else:
+            await self.message.edit(view=None)
+
+    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction, button):
+        await interaction.response.defer()
+        await self.finalize(True)
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction, button):
+        await interaction.response.defer()
+        await self.finalize(False)
+
+    async def on_timeout(self):
+        if self.message:
+            await self.message.delete()
+
+
+class CustomContext(commands.Context):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    async def confirm(self, content=None, *, timeout=40, delete_after=False, cls=ConfirmationView, **kwargs):  # type: ignore
+        view = cls(self, timeout=timeout, delete_after=delete_after)
+        view.message = await self.send(content, view=view, **kwargs)
+        await view.wait()
+        return view.outcome
