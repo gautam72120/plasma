@@ -8,7 +8,7 @@ class ConfirmationView(discord.ui.View):
     def __init__(self, ctx, *, timeout, delete_after):
         super().__init__(timeout=timeout)
         self.ctx = ctx
-        self.outcome = None
+        self.result = None
         self.message = None
         self.delete_after = delete_after
 
@@ -19,8 +19,8 @@ class ConfirmationView(discord.ui.View):
             return False
         return True
 
-    async def finalize(self, outcome):
-        self.outcome = outcome
+    async def finalize(self, result):
+        self.result = result
         self.stop()
 
         if self.message is None:
@@ -54,4 +54,4 @@ class CustomContext(commands.Context):
         view = cls(self, timeout=timeout, delete_after=delete_after)
         view.message = await self.send(content, view=view, **kwargs)
         await view.wait()
-        return view.outcome
+        return view.result
