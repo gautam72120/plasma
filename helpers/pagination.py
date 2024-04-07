@@ -35,7 +35,7 @@ class AsyncEmbedPageSource(menus.AsyncIteratorPageSource):
         embed.set_footer(
             text=f"Showing entries {start + 1}–{start + len(page)} out of {self.count}"
         )
-        return start, embed
+        return embed
 
 
 class CodeBlockTablePageSource(AsyncEmbedPageSource):
@@ -43,7 +43,8 @@ class CodeBlockTablePageSource(AsyncEmbedPageSource):
         return string.rjust(width) if string.isdigit() else string.ljust(width)
 
     async def format_page(self, menu, page):
-        start, embed = await super().format_page(menu, page)
+        start = menu.current_page * self.per_page
+        embed = await super().format_page(menu, page)
 
         table = [
             (
@@ -66,7 +67,8 @@ class CodeBlockTablePageSource(AsyncEmbedPageSource):
 
 class FieldsPageSource(AsyncEmbedPageSource):
     async def format_page(self, menu, page):
-        start, embed = await super().format_page(menu, page)
+        start = menu.current_page * self.per_page
+        embed = await super().format_page(menu, page)
 
         for i, x in enumerate(page, start=start):
             embed.add_field(**self.format_entry(i, x))
@@ -76,7 +78,8 @@ class FieldsPageSource(AsyncEmbedPageSource):
 
 class ListPageSource(AsyncEmbedPageSource):
     async def format_page(self, menu, page):
-        start, embed = await super().format_page(menu, page)
+        start = menu.current_page * self.per_page
+        embed = await super().format_page(menu, page)
 
         lines = [
             f"{i+1}. {x}" if self.format_index else str(x)
