@@ -64,7 +64,7 @@ class AutoPost(commands.Cog):
         if message.author.id != self.bot.user.id:
             self.update[message.channel.id] = True
 
-    @tasks.loop(minutes=10)
+    @tasks.loop(minutes=5)
     async def autopost(self):
         for post in self.posts:
             if not next(post.execute):
